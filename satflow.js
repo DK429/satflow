@@ -1,7 +1,11 @@
-/* SATFlow logic — DK Coding (v0.7 mobile)
-   New:
-   - Per-sample category counts (Car, LGV, HGV, Cycle) captured and shown
-   - Robust Undo using an action log
+/* SATFlow logic — DK Coding (v1.1 mobile)
+   - Minimal measurement UI (timer + count + live flow)
+   - Controls only on Measurements tab; fade in/out
+   - Active: 2x2 vehicle grid + bottom End-of-Sat
+   - Delay-deducted seconds recorded per sample; flows use effective seconds
+   - TXT export: fixed-width columns with totals row
+   - NEW: Running "Last Sample" flow on Measurements (idle only)
+   - NEW: Post-sample admin: End Survey + Delete Last Sample
 */
 
 (function(){
@@ -20,12 +24,13 @@
     },
     running: false,
     startTs: 0,
-    enableAt: 0,     // when to enable PCU buttons (now + delay after green)
+    enableAt: 0,
     tickHandle: null,
     currentPCU: 0,
     currentCounts: { car: 0, lgv: 0, hgv: 0, cycle: 0 },
-    actionLog: [], // [{type:'car'|'lgv'|'hgv'|'cycle', delta: number}]
-    samples: [] // { sampleNo, pcu, seconds, flowPcuPerHour, car, lgv, hgv, cycle }
+    actionLog: [], // for accurate undo during counting
+    samples: [], // { sampleNo, pcu, seconds, flowPcuPerHour, car, lgv, hgv, cycle }
+    settings: { haptics: true }
   };
 
   // ----------- Elements -----------
@@ -49,26 +54,29 @@
     tabBtns: document.querySelectorAll('.tab-btn'),
     startMeasurements: document.getElementById('start-measurements'),
     green: document.getElementById('green-btn'),
+    endOfSat: document.getElementById('end-of-sat-btn'),
     car: document.getElementById('btn-car'),
     lgv: document.getElementById('btn-lgv'),
     hgv: document.getElementById('btn-hgv'),
     cycle: document.getElementById('btn-cycle'),
-    undo: document.getElementById('undo-btn'),
-    resetCurrent: document.getElementById('reset-current-btn'),
     endSurvey: document.getElementById('end-survey-btn'),
+    deleteLast: document.getElementById('delete-last-btn'),
     exportCSV: document.getElementById('export-csv'),
     exportTXT: document.getElementById('export-txt'),
-    resetSurvey: document.getElementById('reset-survey-btn')
+    resetCurrentResults: document.getElementById('reset-current-btn'),
+    resetSurvey: document.getElementById('reset-survey-btn'),
+    hapticsToggle: document.getElementById('haptics-toggle')
   };
 
   const display = {
     timer: document.getElementById('timer-display'),
     pcu: document.getElementById('pcu-display'),
-    sampleCount: document.getElementById('sample-count'),
     liveFlow: document.getElementById('live-flow'),
-    samplesBody: document.getElementById('samples-body'),
     resultsBody: document.getElementById('results-body'),
-    summary: document.getElementById('summary')
+    summary: document.getElementById('summary'),
+    lastSampleWrap: document.getElementById('last-sample'),
+    lastFlow: document.getElementById('last-flow'),
+    lastSampleNo: document.getElementById('last-sample-no')
   };
 
   // ----------- Utils -----------
@@ -81,12 +89,14 @@
     return `${pad(m)}:${pad(s)}.${pad(cs)}`;
   }
   function nowSec(){ return performance.now()/1000; }
+  function haptic(ms){ try{ if(state.settings?.haptics && 'vibrate' in navigator) navigator.vibrate(ms); }catch(e){} }
 
   function setActiveTab(tabName){
     Object.values(tabs).forEach(el => el.classList.remove('active'));
     tabs[tabName].classList.add('active');
     btns.tabBtns.forEach(b => b.classList.toggle('active', b.dataset.tab===tabName));
-    const dock = document.querySelector('.controls-docked');
+    // toggle dock visibility
+    const dock = document.getElementById('dock');
     if(dock){
       if(tabName === 'measure'){
         dock.classList.remove('controls-hidden');
@@ -125,8 +135,19 @@
     ].join(' | ');
   }
 
+  function updateLastSampleSummary(){
+    if(state.samples.length === 0){
+      display.lastSampleWrap.style.display = 'none';
+      return;
+    }
+    const last = state.samples[state.samples.length - 1];
+    display.lastFlow.textContent = last.flowPcuPerHour.toFixed(1) + ' pcu/h';
+    display.lastSampleNo.textContent = '#' + last.sampleNo;
+    display.lastSampleWrap.style.display = '';
+  }
+
   // ----------- Measurements Logic -----------
-  function startGreen(){
+  function startGreen(){ haptic(60);
     if(state.running) return;
     state.running = true;
     state.startTs = nowSec();
@@ -137,15 +158,16 @@
     display.pcu.textContent = '0';
     display.timer.textContent = '00:00.00';
 
-    btns.green.textContent = 'End of Sat';
-    // vehicle buttons will be enabled after delay in the tick loop
+    document.body.classList.remove('idle');
+    document.body.classList.add('counting');
+
+    // vehicle buttons enable after delay in the tick loop
     btns.car.disabled = true; btns.lgv.disabled = true; btns.hgv.disabled = true; btns.cycle.disabled = true;
-    btns.undo.disabled = false;
-    btns.resetCurrent.disabled = false;
 
     state.tickHandle = setInterval(()=>{
-      const allow = nowSec() >= state.enableAt;
-      display.timer.textContent = fmtSeconds(nowSec() - state.startTs);
+      const tnow = nowSec();
+      display.timer.textContent = fmtSeconds(tnow - state.startTs);
+      const allow = tnow >= state.enableAt;
       btns.car.disabled = !allow;
       btns.lgv.disabled = !allow;
       btns.hgv.disabled = !allow;
@@ -153,7 +175,7 @@
     }, 50);
   }
 
-  function endSat(){
+  function endSat(){ haptic(90);
     if(!state.running) return;
     state.running = false;
     const duration = Math.max(0, nowSec() - state.startTs);
@@ -161,27 +183,28 @@
 
     const sampleNo = state.samples.length + 1;
     const pcu = state.currentPCU;
-    const seconds = duration;
-    const flow = seconds > 0 ? (pcu / seconds) * 3600 : 0;
+    const rawSeconds = duration;
+    const effSeconds = Math.max(0, rawSeconds - (state.site.startDelaySec ?? 2));
+    const flow = effSeconds > 0 ? (pcu / effSeconds) * 3600 : 0;
     const {car, lgv, hgv, cycle} = state.currentCounts;
 
-    state.samples.push({ sampleNo, pcu, seconds, flowPcuPerHour: flow, car, lgv, hgv, cycle });
-    renderSamples();
-    updateLiveFlow();
+    state.samples.push({ sampleNo, pcu, seconds: effSeconds, flowPcuPerHour: flow, car, lgv, hgv, cycle });
 
-    // reset for next measurement
+    // reset for next
     state.currentPCU = 0;
     state.currentCounts = { car: 0, lgv: 0, hgv: 0, cycle: 0 };
     state.actionLog = [];
     display.pcu.textContent = '0';
     display.timer.textContent = '00:00.00';
-    btns.green.textContent = 'Green';
-    btns.car.disabled = true; btns.lgv.disabled = true; btns.hgv.disabled = true; btns.cycle.disabled = true;
-    btns.undo.disabled = true;
-    btns.resetCurrent.disabled = true;
+
+    document.body.classList.remove('counting');
+    document.body.classList.add('idle');
+
+    updateLiveFlow();
+    updateLastSampleSummary();
   }
 
-  function incrementPCUBy(type, delta){
+  function incrementPCUBy(type, delta){ haptic(35);
     if(!state.running || nowSec() < state.enableAt) return;
     state.currentPCU = +(state.currentPCU + delta).toFixed(1);
     state.currentCounts[type] += 1;
@@ -192,65 +215,50 @@
   function undo(){
     if(state.running){
       const last = state.actionLog.pop();
-      if(last){
-        state.currentPCU = +(state.currentPCU - last.delta).toFixed(1);
-        state.currentPCU = Math.max(0, state.currentPCU);
+      if(last){ haptic(40);
+        state.currentPCU = Math.max(0, +(state.currentPCU - last.delta).toFixed(1));
         state.currentCounts[last.type] = Math.max(0, state.currentCounts[last.type] - 1);
         display.pcu.textContent = String(state.currentPCU);
       }
-    } else {
-      // undo last saved sample
-      if(state.samples.length>0){
-        state.samples.pop();
-        renderSamples();
-        updateLiveFlow();
-      }
+    } else if(state.samples.length > 0){
+      // Undo last completed sample
+      state.samples.pop();
+      updateLiveFlow();
+      updateLastSampleSummary();
+      renderResults();
+    }
+  }
+
+  function deleteLastSample(){ haptic(50);
+    if(state.running) return; // avoid conflicts
+    if(state.samples.length > 0){
+      state.samples.pop();
+      updateLiveFlow();
+      updateLastSampleSummary();
+      renderResults();
     }
   }
 
   function resetCurrent(){
-    if(state.running){
-      state.currentPCU = 0;
-      state.currentCounts = { car: 0, lgv: 0, hgv: 0, cycle: 0 };
-      state.actionLog = [];
-      display.pcu.textContent = '0';
-    }
-  }
-
-  function renderSamples(){
-    display.samplesBody.innerHTML = '';
-    state.samples.forEach(s => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `<td>${s.sampleNo}</td>
-                      <td>${s.pcu}</td>
-                      <td>${s.seconds.toFixed(2)}</td>
-                      <td>${s.flowPcuPerHour.toFixed(1)}</td>
-                      <td>${s.car}</td>
-                      <td>${s.lgv}</td>
-                      <td>${s.hgv}</td>
-                      <td>${s.cycle}</td>`;
-      display.samplesBody.appendChild(tr);
-    });
-    display.sampleCount.textContent = String(state.samples.length);
+    // Clears all recorded samples & results (keeps site info) — used from Results tab
+    state.samples = [];
+    state.currentPCU = 0;
+    state.currentCounts = { car: 0, lgv: 0, hgv: 0, cycle: 0 };
+    state.actionLog = [];
+    display.pcu.textContent = '0';
+    display.timer.textContent = '00:00.00';
+    display.summary.innerHTML = '';
+    display.resultsBody.innerHTML = '';
+    updateLiveFlow();
+    updateLastSampleSummary();
+    setActiveTab('measure');
   }
 
   function updateLiveFlow(){
     const totalPCU = state.samples.reduce((a,b)=>a+b.pcu,0);
-    const totalSec = state.samples.reduce((a,b)=>a+b.seconds,0);
-    const flow = totalSec>0 ? (totalPCU/totalSec)*3600 : NaN;
+    const totalEffSec = state.samples.reduce((a,b)=>a+b.seconds,0); // effective seconds
+    const flow = totalEffSec>0 ? (totalPCU/totalEffSec)*3600 : NaN;
     display.liveFlow.textContent = isFinite(flow) ? flow.toFixed(1) : '—';
-  }
-
-  function endSurvey(){
-    if(state.running){ endSat(); }
-    btns.green.disabled = true;
-    btns.car.disabled = true; btns.lgv.disabled = true; btns.hgv.disabled = true; btns.cycle.disabled = true;
-    btns.undo.disabled = false;
-    btns.resetCurrent.disabled = true;
-    btns.endSurvey.disabled = true;
-
-    renderResults();
-    setActiveTab('results');
   }
 
   // ----------- Results -----------
@@ -271,8 +279,8 @@
     });
 
     const totalPCU = s.reduce((a,b)=>a+b.pcu,0);
-    const totalSec = s.reduce((a,b)=>a+b.seconds,0);
-    const flowTotal = totalSec>0 ? (totalPCU/totalSec)*3600 : 0;
+    const totalEffSec = s.reduce((a,b)=>a+b.seconds,0);
+    const flowTotal = totalEffSec>0 ? (totalPCU/totalEffSec)*3600 : 0;
     const meanOfRates = s.length>0 ? (s.reduce((a,b)=>a+b.flowPcuPerHour,0)/s.length) : 0;
 
     const header = siteHeader();
@@ -282,7 +290,7 @@
       <div style="margin-top:8px">
         Samples: <span class="mono">${s.length}</span> ·
         Total PCU: <span class="mono">${totalPCU}</span> ·
-        Total Seconds: <span class="mono">${totalSec.toFixed(2)}</span> ·
+        Total Seconds (eff): <span class="mono">${totalEffSec.toFixed(2)}</span> ·
         <strong>Lane Saturation Flow (pcu/h):</strong>
         <span class="mono">${flowTotal.toFixed(1)}</span>
         <span style="color:var(--muted)">(mean of per-sample rates: ${meanOfRates.toFixed(1)}; delay ${delay}s)</span>
@@ -310,7 +318,7 @@
   function exportCSV(){
     const lines = [];
     const s = state.site;
-    lines.push(`"SATFlow v0.7 (mobile)"`);
+    lines.push(`"SATFlow v1.1 (mobile)"`);
     lines.push(`"Site","${s.site}"`);
     lines.push(`"Junction","${s.junction}"`);
     lines.push(`"Arm/Lane","${s.arm}"`);
@@ -324,8 +332,8 @@
       lines.push(`${r.sampleNo},${r.pcu},${r.seconds.toFixed(2)},${r.flowPcuPerHour.toFixed(1)},${r.car},${r.lgv},${r.hgv},${r.cycle}`);
     }
     const totalPCU = state.samples.reduce((a,b)=>a+b.pcu,0);
-    const totalSec = state.samples.reduce((a,b)=>a+b.seconds,0);
-    const flowTotal = totalSec>0 ? (totalPCU/totalSec)*3600 : 0;
+    const totalEffSec = state.samples.reduce((a,b)=>a+b.seconds,0);
+    const flowTotal = totalEffSec>0 ? (totalPCU/totalEffSec)*3600 : 0;
     lines.push("");
     lines.push(`"Lane Saturation Flow (pcu/h)",${flowTotal.toFixed(1)}`);
     downloadText(lines.join("\\r\\n"), suggestFileBase()+".csv", "text/csv");
@@ -334,8 +342,8 @@
   function exportTXT(){
     const s = state.site;
     const lines = [];
-    const push = t => lines.push(t + "\r\n");
-    push("SATFlow v0.7 (mobile)");
+    const push = t => lines.push(t + "\\r\\n");
+    push("SATFlow v1.1 (mobile)");
     push(`Site        : ${s.site}`);
     push(`Junction    : ${s.junction}`);
     push(`Arm/Lane    : ${s.arm}`);
@@ -361,19 +369,17 @@
       push(row.map((v,i)=>fmt(v,widths[i])).join(" "));
     }
     const totalPCU = state.samples.reduce((a,b)=>a+b.pcu,0);
-    const totalSec = state.samples.reduce((a,b)=>a+b.seconds,0);
+    const totalEffSec = state.samples.reduce((a,b)=>a+b.seconds,0);
     const sumCar = state.samples.reduce((a,b)=>a+b.car,0);
     const sumLGV = state.samples.reduce((a,b)=>a+b.lgv,0);
     const sumHGV = state.samples.reduce((a,b)=>a+b.hgv,0);
     const sumCyc = state.samples.reduce((a,b)=>a+b.cycle,0);
-    const flowTotal = totalSec>0 ? (totalPCU/totalSec)*3600 : 0;
-    // dashed separator length equals header line length
+    const flowTotal = totalEffSec>0 ? (totalPCU/totalEffSec)*3600 : 0;
     push(" " + "─".repeat(headerLine.length-1));
-    // Totals row: Sample col shows 'Totals:' (right-aligned), Flow column blank
     const totalsRow = [
       "Totals:",
       totalPCU.toFixed(1),
-      totalSec.toFixed(1),
+      totalEffSec.toFixed(1),
       "".padStart(widths[3]),
       String(sumCar),
       String(sumLGV),
@@ -393,7 +399,7 @@
 
   // ----------- Event Wiring -----------
   function wire(){
-    // top nav
+    // tabs
     btns.tabBtns.forEach(b => { b.addEventListener('click', () => setActiveTab(b.dataset.tab)); });
 
     btns.startMeasurements.addEventListener('click', () => {
@@ -401,58 +407,36 @@
       const dh = document.getElementById('delay-hint');
       if(dh){ dh.textContent = `Counting starts ${state.site.startDelaySec}s after Green`; }
       setActiveTab('measure');
+      updateLastSampleSummary();
     });
 
-    btns.green.addEventListener('click', () => { if(!state.running) startGreen(); else endSat(); });
+    btns.green.addEventListener('click', () => { if(!state.running) startGreen(); });
+    btns.endOfSat.addEventListener('click', endSat);
+
     btns.car.addEventListener('click', ()=>incrementPCUBy('car',1));
     btns.lgv.addEventListener('click', ()=>incrementPCUBy('lgv',1.5));
     btns.hgv.addEventListener('click', ()=>incrementPCUBy('hgv',2));
     btns.cycle.addEventListener('click', ()=>incrementPCUBy('cycle',0.5));
-    btns.undo.addEventListener('click', undo);
-    btns.resetCurrent.addEventListener('click', resetCurrent);
-    btns.endSurvey.addEventListener('click', endSurvey);
+
+    btns.endSurvey.addEventListener('click', () => { haptic(40); if(state.running) endSat(); renderResults(); setActiveTab('results'); });
+    btns.deleteLast.addEventListener('click', deleteLastSample);
 
     btns.exportCSV.addEventListener('click', exportCSV);
     btns.exportTXT.addEventListener('click', exportTXT);
-
+    btns.resetCurrentResults.addEventListener('click', resetCurrent);
     btns.resetSurvey.addEventListener('click', () => {
-      // Clear only Arm/Lane field, keep other site data
       siteForm.arm.value = '';
       state.site.arm = '';
-
-      // reset samples and live displays
-      state.samples = [];
-      state.currentPCU = 0;
-      state.currentCounts = { car: 0, lgv: 0, hgv: 0, cycle: 0 };
-      state.actionLog = [];
-      display.pcu.textContent = '0';
-      display.timer.textContent = '00:00.00';
-      renderSamples();
-      updateLiveFlow();
-      display.resultsBody.innerHTML = '';
-      display.summary.innerHTML = '';
-
-      // re-enable measurement controls
-      btns.green.disabled = false;
-      btns.endSurvey.disabled = false;
-      btns.undo.disabled = true;
-      btns.resetCurrent.disabled = true;
-      btns.car.disabled = true; btns.lgv.disabled = true; btns.hgv.disabled = true; btns.cycle.disabled = true;
-
-      // return to Measurements tab for a fresh run
-      setActiveTab('measure');
+      resetCurrent();
     });
 
-    // keyboard helpers (on Measurements tab)
+    // keyboard helpers
     window.addEventListener('keydown', (e) => {
       if(tabs.measure.classList.contains('active')){
         if(e.code === 'Space'){
           e.preventDefault();
-          btns.green.click();
-        } else if(e.key === '+'){
-          e.preventDefault();
-          if(!btns.car.disabled) btns.car.click();
-        } else if(e.key === '1' || e.key.toLowerCase()==='c'){
+          (state.running ? btns.endOfSat : btns.green).click();
+        } else if(e.key === '+' || e.key === '1' || e.key.toLowerCase()==='c'){
           e.preventDefault(); if(!btns.car.disabled) btns.car.click();
         } else if(e.key === '2' || e.key.toLowerCase()==='l'){
           e.preventDefault(); if(!btns.lgv.disabled) btns.lgv.click();
@@ -462,16 +446,41 @@
           e.preventDefault(); if(!btns.cycle.disabled) btns.cycle.click();
         } else if(e.key.toLowerCase() === 'u'){
           e.preventDefault();
-          btns.undo.click();
-        } else if(e.key.toLowerCase() === 'r'){
-          e.preventDefault();
-          btns.resetCurrent.click();
+          // Undo last increment while counting, or last sample if idle
+          if(state.running) {
+            const evt = new Event('click'); // no-op; call function directly to avoid prevention
+            undo();
+          } else {
+            undo();
+          }
         }
       }
     });
+
+    // Disable End Survey while counting for safety
+    const updateSafety = () => { btns.endSurvey.disabled = document.body.classList.contains('counting'); };
+    const mo = new MutationObserver(updateSafety);
+    mo.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+    updateSafety();
   }
 
   function init(){
+    // restore settings
+    try{
+      const raw = localStorage.getItem('satflow_settings');
+      if(raw){
+        const parsed = JSON.parse(raw);
+        if(typeof parsed.haptics === 'boolean'){ state.settings.haptics = parsed.haptics; }
+      }
+    }catch(e){}
+    if(btns.hapticsToggle){
+      btns.hapticsToggle.checked = !!state.settings.haptics;
+      btns.hapticsToggle.addEventListener('change', () => {
+        state.settings.haptics = !!btns.hapticsToggle.checked;
+        try{ localStorage.setItem('satflow_settings', JSON.stringify(state.settings)); }catch(e){}
+      });
+    }
+    document.body.classList.add('idle');
     loadToday();
     wire();
     setActiveTab('site');
@@ -479,5 +488,3 @@
 
   init();
 })();
-
-
