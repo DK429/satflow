@@ -124,3 +124,4 @@ body.idle.has-samples #dock .admin-row{ display:flex; }
 /* Checkbox row */
 .checkbox-row{ display:flex; align-items:center; gap:10px; font-size:14px; color: var(--text); }
 .checkbox-row input{ width:18px; height:18px; }
+
