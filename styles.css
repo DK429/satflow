@@ -1,4 +1,4 @@
-/* SATFlow mobile-first UI (v0.9) */
+/* SATFlow mobile-first UI (v1.4) */
 :root{
   --bg:#0f172a;
   --card:#111827;
@@ -40,7 +40,9 @@ nav{ display:flex; gap:8px; overflow:auto; scrollbar-width: thin; }
 .tab-btn.active{ border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
 
 main{ max-width: 1100px; margin: 20px auto; padding: 0 16px; }
-.tab{ display:none; background: linear-gradient(180deg, rgba(255,255,255,.02), transparent 50%), var(--card); border:1px solid rgba(148,163,184,.15); padding: clamp(14px, 2.5vw, 20px); border-radius: var(--radius); box-shadow: var(--shadow); }
+.tab{ display:none; background: linear-gradient(180deg, rgba(255,255,255,.02), transparent 50%), var(--card);
+  border:1px solid rgba(148,163,184,.15); padding: clamp(14px, 2.5vw, 20px);
+  border-radius: var(--radius); box-shadow: var(--shadow); }
 .tab.active{ display:block; }
 
 .grid{ display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap:16px; }
@@ -61,13 +63,16 @@ input, textarea{
 
 .last-sample{ margin: 6px 0 2px; }
 
-.table-wrap{ overflow:auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; border:1px solid rgba(148,163,184,.2); border-radius: 12px; }
+.table-wrap{ overflow:auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain;
+  border:1px solid rgba(148,163,184,.2); border-radius: 12px; }
 table{ width:100%; border-collapse: collapse; }
-thead th{ text-align:left; font-size:12px; color:var(--muted); background:#0c142a; position: sticky; top:0; z-index: 2; }
+thead th{ text-align:left; font-size:12px; color:var(--muted); background:#0c142a;
+  position: sticky; top:0; z-index: 2; }
 th, td{ padding:10px 12px; border-bottom: 1px solid rgba(148,163,184,.15); font-family: var(--mono); }
 tbody tr:hover{ background: rgba(148,163,184,.05); }
 
-.summary{ padding:12px; background:#0b162d; border:1px solid rgba(148,163,184,.2); border-radius: 12px; margin-bottom: 12px; }
+.summary{ padding:12px; background:#0b162d; border:1px solid rgba(148,163,184,.2);
+  border-radius: 12px; margin-bottom: 12px; }
 
 footer{ max-width:1100px; margin: 24px auto 40px; padding: 0 16px; color: var(--muted); }
 
@@ -75,7 +80,9 @@ footer{ max-width:1100px; margin: 24px auto 40px; padding: 0 16px; color: var(--
 .controls-docked{
   position: fixed;
   left: 0; right: 0; bottom: 0;
-  padding: 10px max(env(safe-area-inset-left), 12px) calc(10px + env(safe-area-inset-bottom)) max(env(safe-area-inset-right), 12px);
+  padding: 10px max(env(safe-area-inset-left), 12px)
+           calc(10px + env(safe-area-inset-bottom))
+           max(env(safe-area-inset-right), 12px);
   background: linear-gradient(0deg, rgba(15,23,42,0.98), rgba(15,23,42,0.92) 60%, transparent);
   border-top: 1px solid rgba(148,163,184,.18);
   border-radius: 0;
@@ -85,19 +92,12 @@ footer{ max-width:1100px; margin: 24px auto 40px; padding: 0 16px; color: var(--
   z-index: 50;
   transition: transform .2s ease, opacity .2s ease;
 }
-.controls-hidden{
-  opacity: 0;
-  pointer-events: none;
-  transform: translateY(100%);
-}
+.controls-hidden{ opacity: 0; pointer-events: none; transform: translateY(100%); }
 
 /* 2x2 vehicle grid */
-.veh-grid{
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-button{ border:1px solid rgba(148,163,184,.2); border-radius: 12px; padding:10px 14px; cursor:pointer; background:#0b162d; color: var(--text); min-height: var(--tap); }
+.veh-grid{ display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+button{ border:1px solid rgba(148,163,184,.2); border-radius: 12px; padding:10px 14px;
+  cursor:pointer; background:#0b162d; color: var(--text); min-height: var(--tap); }
 button.primary{ background: #0a213e; border-color: var(--accent); }
 button.secondary{ background:#0b2a19; border-color: var(--accent-2); }
 button.ghost{ background: transparent; }
@@ -109,19 +109,18 @@ button:disabled{ opacity:.5; cursor:not-allowed; }
 
 /* Only add bottom padding when dock is visible */
 body.dock-visible main{ padding-bottom: 140px; }
-@media (min-width: 720px){
-  body.dock-visible main{ padding-bottom: 120px; }
-}
-/* Counting state UI */
-body.counting #dock .admin-row{ display:none; }
-body.counting #end-of-sat-btn{ display:block !important; }
-body.counting #green-btn{ display:none !important; }
-body.idle #end-of-sat-btn{ display:none !important; }
-body.idle #green-btn{ display:block !important; }
-/* Hide last-sample line while counting */
-body.counting #last-sample{ display:none !important; }
+@media (min-width: 720px){ body.dock-visible main{ padding-bottom: 120px; } }
 
-.checkbox-row{
-  display:flex; align-items:center; gap:10px; font-size:14px; color: var(--text);
-}
-.checkbox-row input{ width: 18px; height: 18px; }
+/* State-driven visibility (v1.4 fix) */
+body.idle #dock .veh-grid{ display: none; }
+body.counting #dock .veh-grid{ display: grid; }
+body.counting #dock .admin-row{ display: none; }
+body.idle #end-of-sat-btn{ display:none !important; }
+body.counting #green-btn{ display:none !important; }
+/* Admin row only after first sample */
+body.idle:not(.has-samples) #dock .admin-row{ display:none; }
+body.idle.has-samples #dock .admin-row{ display:flex; }
+
+/* Checkbox row */
+.checkbox-row{ display:flex; align-items:center; gap:10px; font-size:14px; color: var(--text); }
+.checkbox-row input{ width:18px; height:18px; }
