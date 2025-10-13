@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
   <meta name="theme-color" content="#0f172a"/>
-  <title>SATFlow — Saturation Flow Survey (v1.5.4 modular)</title>
+  <title>SATFlow — Saturation Flow Survey (v1.5.5 modular)</title>
   <link rel="stylesheet" href="css/styles.css"/>
 </head>
 <body>
@@ -18,7 +18,6 @@
   </header>
 
   <main>
-    <!-- Site Tab (compact placeholders) -->
     <section id="tab-site" class="tab active">
       <h2>Site Details</h2>
       <form id="site-form">
@@ -30,15 +29,13 @@
           <input type="date" id="date" />
           <input type="number" id="delay" step="0.1" min="0" placeholder="Start-up Delay (s) – 2" />
           <textarea id="notes" rows="3" placeholder="Notes (optional)"></textarea>
-          <label class="checkbox-row"><input type="checkbox" id="haptics-toggle" checked /> Enable Haptic Feedback</label>
         </div>
         <div class="actions">
-          <button type="button" id="start-measurements">Go to Measurements ▶</button>
+          <button type="button" id="start-measurements" class="cta-big">Go to Measurements ▶</button>
         </div>
       </form>
     </section>
 
-    <!-- Measurements Tab -->
     <section id="tab-measure" class="tab">
       <h2>Measurements</h2>
       <div class="status-row">
@@ -49,7 +46,6 @@
       <div id="last-sample" class="last-sample muted" style="display:none">Last Flow: <span id="last-flow" class="mono">—</span> (Sample <span id="last-sample-no" class="mono">—</span>)</div>
     </section>
 
-    <!-- Results Tab -->
     <section id="tab-results" class="tab">
       <h2>Results</h2>
       <div id="summary" class="summary"></div>
@@ -68,7 +64,7 @@
     </section>
   </main>
 
-  <footer><small>DK Coding · SATFlow v1.5.4 (mobile, modular) · Runs fully offline</small></footer>
+  <footer><small>DK Coding · SATFlow v1.5.5 (mobile, modular) · Runs fully offline</small></footer>
 
   <div class="controls controls-docked controls-hidden" id="dock">
     <div class="veh-grid">

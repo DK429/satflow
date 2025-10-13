@@ -9,7 +9,6 @@ export const state = {
   car:0, lgv:0, hgv:0, cyc:0,
   samples:[],
   site:{},
-  settings:{haptics:true}
 };
 export function hasSamples(){ return state.samples.length>0; }
 export function resetRunTallies(){

@@ -2,8 +2,8 @@
 import { state, resetRunTallies } from './state.js';
 import { nowSec, formatTime } from './utils.js';
 import { btns, ui, toggleVeh } from './dom.js';
-import { haptic } from './haptics.js';
 import { renderResults, updateLastSampleSummary } from './results.js';
+import { click as audioClick } from './audio.js';
 
 let rafId=null;
 function tick(){
@@ -15,6 +15,7 @@ function tick(){
 
 export function startGreen(){
   if(state.running) return;
+  audioClick();
   state.running=true;
   state.startTime=nowSec();
   resetRunTallies();
@@ -35,6 +36,7 @@ export function startGreen(){
 
 export function endSat(){
   if(!state.running) return;
+  audioClick();
   state.running=false;
   if(rafId){ cancelAnimationFrame(rafId); rafId=null; }
   const totalSec=nowSec()-state.startTime;
@@ -58,6 +60,7 @@ export function endSat(){
 
 export function incrementPCUBy(type, delta){
   if(!state.running || !state.counterStart || nowSec() < state.counterStart) return;
+  audioClick();
   state.totalPCU=+(state.totalPCU+delta).toFixed(1);
   state[type]=(state[type]||0)+1;
   ui.pcu.textContent=state.totalPCU.toFixed(1);

@@ -9,7 +9,6 @@ export const btns={
   exportCSV:document.getElementById('export-csv'),
   exportTXT:document.getElementById('export-txt'),
   resetSurvey:document.getElementById('reset-survey-btn'),
-  hapticsToggle:document.getElementById('haptics-toggle'),
   veh:{
     car:document.getElementById('btn-car'),
     lgv:document.getElementById('btn-lgv'),
