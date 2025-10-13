@@ -1,11 +1,7 @@
-// scripts/tabs.js
-// Tab switching and dock visibility / state classes.
-
+// tabs.js patch for v1.5.1
 import { state } from './state.js';
 import { btns } from './dom.js';
 
-// setActiveTab(tab) -> void
-// Makes the requested tab visible and manages the dock + idle/counting classes.
 export function setActiveTab(tab){
   state.tab = tab;
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
@@ -21,7 +17,9 @@ export function setActiveTab(tab){
     document.body.classList.remove('counting');
     btns.green.style.display = '';
     btns.endSat.style.display = 'none';
-  }else{
+    // Ensure admin row visible when samples exist
+    document.body.classList.toggle('has-samples', state.samples.length > 0);
+  } else {
     dock.classList.add('controls-hidden');
     document.body.classList.remove('dock-visible');
   }
