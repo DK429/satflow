@@ -1,6 +1,6 @@
-/* SATFlow v1.4 (mobile)
+/* SATFlow v1.4.1 (mobile)
    DK Coding — Saturation Flow Survey
-   Includes haptic feedback toggle, delay-adjusted flow, and line-by-line TXT export
+   Fixes: Dock visibility on Measurements tab + Green button shown on entry
 */
 
 const state = {
@@ -51,14 +51,8 @@ function haptic(ms){
   try{ if(state.settings?.haptics && 'vibrate' in navigator) navigator.vibrate(ms); }catch(e){}
 }
 
-function pad(num, width){
-  const str = num.toFixed(2).padStart(width,' ');
-  return str;
-}
-function padInt(num, width){
-  const str = String(num).padStart(width,' ');
-  return str;
-}
+function pad(num, width){ return num.toFixed(2).padStart(width,' '); }
+function padInt(num, width){ return String(num).padStart(width,' '); }
 
 function formatTime(sec){
   const m = Math.floor(sec/60);
@@ -74,14 +68,33 @@ function updateHasSamplesClass(){
   }
 }
 
+/* --- FIXED --- */
 function setActiveTab(tab){
   state.tab = tab;
+
+  // switch visible section
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.getElementById(`tab-${tab}`).classList.add('active');
+
+  // nav highlight
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.querySelector(`.tab-btn[data-tab="${tab}"]`).classList.add('active');
-  document.body.classList.toggle('dock-visible', tab === 'measure');
+
+  // dock visibility fix
+  const dock = document.getElementById('dock');
+  if (dock) {
+    if (tab === 'measure') {
+      dock.classList.remove('controls-hidden');   // show dock
+      document.body.classList.add('dock-visible');
+      document.body.classList.add('idle');
+      document.body.classList.remove('counting');
+    } else {
+      dock.classList.add('controls-hidden');      // hide elsewhere
+      document.body.classList.remove('dock-visible');
+    }
+  }
 }
+/* --- END FIX --- */
 
 function resetUI(){
   display.timer.textContent = '00:00.00';
@@ -105,6 +118,7 @@ function startGreen(){
   state.counterStart = 0;
   display.pcu.textContent = '0';
   document.body.classList.add('counting');
+  document.body.classList.remove('idle');
   btns.green.disabled = true;
   btns.endSat.disabled = false;
   Object.values(btns.veh).forEach(b => b.disabled = false);
@@ -214,7 +228,7 @@ function exportTXT(){
   const lines = [];
   const push = t => lines.push(t + "\r\n");
 
-  push(`SATFlow v1.4 (mobile)`);
+  push(`SATFlow v1.4.1 (mobile)`);
   push(`Site        : ${s.site}`);
   push(`Junction    : ${s.junction}`);
   push(`Arm/Lane    : ${s.arm}`);
@@ -252,7 +266,7 @@ function exportTXT(){
 function exportCSV(){
   const lines = [];
   const s = state.site;
-  lines.push(`"SATFlow v1.4 (mobile)"`);
+  lines.push(`"SATFlow v1.4.1 (mobile)"`);
   lines.push(`"Site","${s.site}"`);
   lines.push(`"Junction","${s.junction}"`);
   lines.push(`"Arm/Lane","${s.arm}"`);
