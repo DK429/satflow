@@ -4,8 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
   <meta name="theme-color" content="#0f172a"/>
-  <title>SATFlow — Saturation Flow Survey (v1.4)</title>
-  <link rel="stylesheet" href="styles.css"/>
+  <title>SATFlow — Saturation Flow Survey (v1.5 modular)</title>
+  <link rel="stylesheet" href="css/styles.css"/>
 </head>
 <body>
   <header>
@@ -44,12 +44,7 @@
           <label>Notes
             <textarea id="notes" rows="3" placeholder="Optional notes"></textarea>
           </label>
-
-          <!-- Settings -->
-          <label class="checkbox-row">
-            <input type="checkbox" id="haptics-toggle" checked />
-            Enable Haptic Feedback
-          </label>
+          <label class="checkbox-row"><input type="checkbox" id="haptics-toggle" checked /> Enable Haptic Feedback</label>
         </div>
         <div class="actions">
           <button type="button" id="start-measurements">Go to Measurements ▶</button>
@@ -57,7 +52,7 @@
       </form>
     </section>
 
-    <!-- Measurements Tab (minimal) -->
+    <!-- Measurements Tab -->
     <section id="tab-measure" class="tab">
       <h2>Measurements</h2>
 
@@ -89,7 +84,6 @@
       <div class="actions">
         <button id="export-csv" class="secondary">Export CSV</button>
         <button id="export-txt" class="secondary">Export TXT</button>
-        <button id="reset-current-btn" class="ghost">Reset Current</button>
         <button id="reset-survey-btn" class="danger">Reset Survey</button>
       </div>
       <div class="table-wrap">
@@ -116,7 +110,7 @@
   </main>
 
   <footer>
-    <small>DK Coding · SATFlow v1.4 (mobile) · Runs fully offline</small>
+    <small>DK Coding · SATFlow v1.5 (mobile, modular) · Runs fully offline</small>
   </footer>
 
   <!-- Bottom-docked Controls (visible only on Measurements tab) -->
@@ -135,7 +129,6 @@
     </div>
   </div>
 
-  <script src="satflow.js"></script>
+  <script type="module" src="scripts/main.js"></script>
 </body>
 </html>
-
