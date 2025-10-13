@@ -1,7 +1,11 @@
-// results.js patch for v1.5.1
+// scripts/results.js
+// Rendering of results table, totals row, and last-sample summary.
+
 import { state, hasSamples } from './state.js';
 import { ui } from './dom.js';
 
+// renderResults() -> void
+// Paints the samples table and totals row. Also updates the lane flow summary.
 export function renderResults(){
   // Toggle admin row visibility after first sample
   document.body.classList.toggle('has-samples', state.samples.length > 0);
@@ -38,4 +42,23 @@ export function renderResults(){
      <td><strong>${sumCyc}</strong></td>`;
 
   ui.summary.innerHTML = `Lane Saturation Flow (pcu/h): <strong>${flowTotal.toFixed(1)}</strong>`;
+}
+
+// updateLastSampleSummary() -> void
+// Shows a small one-line summary of the most recent sample (when idle).
+export function updateLastSampleSummary(){
+  if(!hasSamples()){ ui.lastWrap.style.display = 'none'; return; }
+  const last = state.samples[state.samples.length-1];
+  ui.lastFlow.textContent = last.flowPcuPerHour.toFixed(1);
+  ui.lastNo.textContent = last.sampleNo;
+  ui.lastWrap.style.display = '';
+}
+
+// deleteLastSample() -> void
+// Removes the last saved sample and repaints the results.
+export function deleteLastSample(){
+  if(state.running || !hasSamples()) return;
+  state.samples.pop();
+  renderResults();
+  updateLastSampleSummary();
 }

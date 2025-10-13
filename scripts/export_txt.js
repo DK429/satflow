@@ -10,7 +10,7 @@ export function exportTXT(){
   const s = state.site;
   const lines = [];
   const push = t => lines.push(t + "\r\n");
-  push(`SATFlow v1.5 (mobile, modular)`);
+  push(`SATFlow v1.5.1 (mobile, modular)`);
   push(`Site        : ${s.site||''}`);
   push(`Junction    : ${s.junction||''}`);
   push(`Arm/Lane    : ${s.arm||''}`);

@@ -8,7 +8,7 @@ import { state } from './state.js';
 export function exportCSV(){
   const s = state.site;
   const lines = [];
-  lines.push(`"SATFlow v1.5 (mobile, modular)"`);
+  lines.push(`"SATFlow v1.5.1 (mobile, modular)"`);
   lines.push(`"Site","${s.site||''}"`);
   lines.push(`"Junction","${s.junction||''}"`);
   lines.push(`"Arm/Lane","${s.arm||''}"`);
