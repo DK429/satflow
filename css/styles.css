@@ -1,221 +1,86 @@
-/* SATFlow v1.5.6 — audible click & bigger CTA */
-:root{--bg:#0f172a;--card:#111827;--text:#e5e7eb;--muted:#94a3b8;--accent:#38bdf8;--accent-2:#22c55e;--danger:#ef4444;--mono:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,'Courier New',monospace;--tap:44px}
-*{box-sizing:border-box}html,body{height:100%}
-body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,Helvetica Neue,Arial;background:#0f172a;color:#e5e7eb;-webkit-text-size-adjust:100%}
-header{position:sticky;top:0;background:rgba(15,23,42,.85);backdrop-filter:blur(8px);border-bottom:1px solid rgba(148,163,184,.2);padding:16px 20px;z-index:10}
-h1{margin:0 0 8px;font-size:22px}
-nav{display:flex;gap:8px;overflow:auto}
-.tab-btn{padding:8px 12px;background:#0b162d;color:var(--text);border:1px solid rgba(148,163,184,.25);border-radius:10px;min-height:var(--tap)}
-.tab-btn.active{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
-main{max-width:1100px;margin:20px auto;padding:0 16px}
-.tab{display:none;background:linear-gradient(180deg,rgba(255,255,255,.02),transparent 50%),#111827;border:1px solid rgba(148,163,184,.15);padding:16px;border-radius:14px}
-.tab.active{display:block}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
-.grid.compact input,.grid.compact textarea{margin-bottom:8px}
-input,textarea{padding:10px 12px;border-radius:10px;border:1px solid rgba(148,163,184,.25);background:#0d152a;color:var(--text);min-height:var(--tap)}
-.actions{margin-top:12px;display:flex;gap:8px;flex-wrap:wrap}
-.status-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:8px}
-.status-box{background:#0b162d;border:1px solid rgba(148,163,184,.2);padding:12px;border-radius:12px}
-.status-label{font-size:12px;color:var(--muted);margin-bottom:6px}
-.mono{font-family:var(--mono)}.big{font-size:26px}
-.summary{padding:12px;background:#0b162d;border:1px solid rgba(148,163,184,.2);border-radius:12px;margin-bottom:12px}
-.table-wrap{overflow:auto;border:1px solid rgba(148,163,184,.2);border-radius:12px}
-table{width:100%;border-collapse:collapse}
-th,td{padding:10px 12px;border-bottom:1px solid rgba(148,163,184,.15);font-family:var(--mono)}
-thead th{font-size:12px;color:var(--muted);background:#0c142a;position:sticky;top:0}
-footer{max-width:1100px;margin:24px auto 40px;padding:0 16px;color:#94a3b8}
-.controls-docked{position:fixed;left:0;right:0;bottom:0;padding:10px 12px calc(10px + env(safe-area-inset-bottom)) 12px;background:linear-gradient(0deg,rgba(15,23,42,.98),rgba(15,23,42,.92) 60%,transparent);border-top:1px solid rgba(148,163,184,.18);display:grid;grid-template-columns:1fr;gap:8px;z-index:50;transition:transform .2s ease,opacity .2s ease}
-.controls-hidden{opacity:0;pointer-events:none;transform:translateY(100%)}
-.veh-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-button{border:1px solid rgba(148,163,184,.2);border-radius:12px;padding:10px 14px;min-height:var(--tap);background:#0b162d;color:#fff;cursor:pointer}
-button.primary{background:#0a213e;border-color:var(--accent)}
-button.secondary{background:#0b2a19;border-color:var(--accent-2)}
-button.danger{background:#2a0b0b;border-color:var(--danger)}
-button.ghost{background:transparent}
-button.wide{width:100%}
-button:disabled{opacity:.5;cursor:not-allowed}
-.admin-row{display:flex;gap:10px;justify-content:space-between}
-body.dock-visible main{padding-bottom:140px}
-body.idle #dock .veh-grid{display:none}
-body.counting #dock .veh-grid{display:grid}
-body.counting #dock .admin-row{display:none}
-body.idle #end-of-sat-btn{display:none !important}
-body.counting #green-btn{display:none !important}
-body.idle:not(.has-samples) #dock .admin-row{display:none}
-body.idle.has-samples #dock .admin-row{display:flex}
-/* Larger controls while counting */
-body.counting #dock .veh-grid button,body.counting #dock #end-of-sat-btn{min-height:calc(var(--tap)*2);padding-top:16px;padding-bottom:16px;font-size:1.1rem}
-body.idle #dock #green-btn{min-height:var(--tap)}
-/* XXL CTA for Site -> Measurements */
-#start-measurements.cta-big{width:100%;min-height:calc(var(--tap)*2);font-size:1.1rem}
-
-/* ...existing code...*/
-/* Stack site details inputs vertically */
-  #tab-site .grid {
-    display: flex !important;
-    flex-direction: column;
-    gap: 0.5rem;
-    align-items: stretch;
-  }
-  #tab-site .grid input,
-  #tab-site .grid textarea,
-  #tab-site .grid select {
-    width: 100%;
-    box-sizing: border-box;
-  }
-
-  /* make the actions area sit under the inputs */
-#tab-site .grid + .actions,
-#tab-site .grid .actions {
-    margin-top: 0.5rem;
-}
-
-/* Limit Site Details area to typical iPhone 16 Pro width */
-#tab-site {
-  width: 100%;
-  max-width: 430px; /* ~iPhone 16 Pro CSS width */
-  margin-left: auto;
-  margin-right: auto;
-}
-
-/* Limit Measurements (survey) area to typical iPhone 16 Pro width */
-#tab-measure {
-  width: 100%;
-  max-width: 430px; /* ~iPhone 16 Pro CSS width */
-  margin-left: auto;
-  margin-right: auto;
-}
-
-/* Increase green button size by 50% */
-#green-btn {
-  min-height: calc(var(--tap) * 1.5) !important; /* from 44px -> ~66px */
-  padding-top: 14px;
-  padding-bottom: 14px;
-  font-size: 1.25rem;
-}
-/* ensure idle-state rule is consistent */
-body.idle #dock #green-btn { min-height: calc(var(--tap) * 1.5) !important; }
-/* ...existing code... */
-
-/* constrain entire app to iPhone 16 Pro width (approx. 430px) */
-:root{--iphone-max-width:430px}
-
-/* header, main and footer should sit inside the phone width */
-header,
-main,
-footer {
-  max-width: var(--iphone-max-width);
-  margin-left: auto;
-  margin-right: auto;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-/* reduce the global main max width (overrides previous larger value) */
-main{max-width:var(--iphone-max-width);margin:20px auto;padding:0 16px}
-
-/* footer constrained too */
-footer{max-width:var(--iphone-max-width);margin:24px auto 40px;padding:0 16px;color:#94a3b8}
-
-/* ensure tabs/cards fill the constrained width */
-.tab{width:100%}
-
-/* controls dock should be centered and no wider than the phone width */
-.controls-docked{
-  left:0;
-  right:0;
-  width:100%;
-  max-width:var(--iphone-max-width);
-  margin-left:auto;
-  margin-right:auto;
-  box-sizing:border-box;
-  padding-left:12px;
-  padding-right:12px;
-}
-
-/* ensure wide buttons inside dock respect the phone width */
-.controls-docked button.wide{width:100%}
-
-/* table wrap should not exceed phone width and scroll horizontally if needed */
-.table-wrap{max-width:100%;overflow:auto}
-
-/* keep existing iPhone-specific tab limits (reinforce) */
-#tab-site, #tab-measure { width:100%; max-width:var(--iphone-max-width); margin-left:auto; margin-right:auto; }
-/* ...existing code... */
-
-// ...existing code...
-/* When #dock is inside the Measurements tab, make it stick to the tab bottom
-   so it remains inside the iPhone width and above the footer. */
-#tab-measure {
-  position: relative; /* containing block for sticky/absolute placement */
-  padding-bottom: calc((var(--tap) * 3) + env(safe-area-inset-bottom) + 16px); /* room for controls */
-}
-
-#tab-measure #dock {
-  position: sticky;
-  bottom: calc(env(safe-area-inset-bottom) + 8px);
-  left: 0;
-  right: 0;
-  margin: 0 auto;
-  width: 100%;
-  max-width: var(--iphone-max-width);
-  box-sizing: border-box;
-  z-index: 40;
-  transform: none !important; /* override transitions that expect fixed */
-}
-
-/* keep dock internals sized as before */
-#tab-measure #dock .veh-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-#tab-measure #dock button.wide{width:100%}
-
-/* ensure fixed-position rules don't conflict when dock is inside the tab */
-#tab-measure #dock.controls-hidden { opacity:0; pointer-events:none; transform:none; }
-/* ...existing code... */
-
-// ...existing code...
-/* Make Results tab action buttons equal width across the results box */
-#tab-results .actions {
-  display: flex;
-  gap: 8px;
-  width: 100%;
-}
-#tab-results .actions button {
-  flex: 1 1 0;
-  min-width: 0; /* prevents overflow when using flex */
-  box-sizing: border-box;
-}
-/* ...existing code... */
-// ...existing code...
-/* Make top tab selectors equal width across the header (inside phone bounds) */
-header nav {
-  display: flex;
-  gap: 8px;
-  width: 100%;
-  box-sizing: border-box;
-  justify-content: space-between;
-  overflow: hidden; /* avoid horizontal scroll inside phone width */
-}
-header .tab-btn {
-  flex: 1 1 0;
-  min-width: 0; /* prevents overflow when using flex */
-  text-align: center;
-}
-/* ensure active state visual still applies */
-header .tab-btn.active { box-shadow: none; }
-/* ...existing code... */
-/* show veh-grid in idle and make buttons same large size as when counting */
-body.idle #dock .veh-grid { display: grid; }
-body.idle #dock .veh-grid button,
-body.idle #dock #end-of-sat-btn {
-  min-height: calc(var(--tap) * 2);
-  padding-top: 16px;
-  padding-bottom: 16px;
-  font-size: 1.1rem;
-}
-
-/* Hide count buttons when idle */
-body.idle #dock .veh-grid,
-body.idle #dock .veh-grid button {
-  display: none !important;
-}
-/* ...existing code... */
+/* Shared visual language with MOVA Speed Survey; survey logic is unchanged. */
+:root { color-scheme: light; --ink: #172435; --muted: #526174; --accent: #194e87; --line: #dce3eb; }
+* { box-sizing: border-box; }
+body { margin: 0; background: #f3f6fa; color: var(--ink); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif; font-size: 16px; line-height: 1.45; }
+.app-shell { max-width: 592px; margin: 0 auto; padding: max(16px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right)) calc(24px + env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left)); }
+.app-header { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 16px; }
+h1 { margin: 0; font-size: 22px; line-height: 1.2; letter-spacing: -.4px; }
+h2 { margin: 0 0 20px; font-size: 20px; line-height: 1.3; }
+h3 { margin: 0; font-size: 18px; }
+.app-version, .muted, .hint, .table-note, footer { color: var(--muted); }
+.app-version { font-size: 14px; white-space: nowrap; }
+button, input, textarea { font: inherit; }
+button { min-height: 56px; min-width: 0; padding: 12px; border: 1px solid var(--line); border-radius: 10px; background: #eef2f7; color: var(--ink); font-size: 17px; font-weight: 600; line-height: 1.25; cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+button:active:not(:disabled) { filter: brightness(.94); }
+button:disabled { color: #657084; background: #e9edf2; cursor: default; }
+button:focus-visible, input:focus-visible, textarea:focus-visible, .table-wrap:focus-visible { outline: 3px solid #3b79b8; outline-offset: 3px; }
+[hidden] { display: none !important; }
+nav { display: flex; gap: 4px; padding: 4px; margin-bottom: 16px; background: #e5ebf2; border-radius: 12px; }
+.tab-btn { flex: 1 1 0; min-height: 48px; padding: 10px 4px; border: 0; border-bottom: 3px solid transparent; border-radius: 8px; font-size: 15px; background: transparent; color: #46556a; }
+.tab-btn.active { background: #fff; color: var(--accent); border-bottom-color: var(--accent); box-shadow: 0 1px 3px #192d4614; }
+main, .tab, .field { min-width: 0; }
+.tab { display: none; background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 16px; box-shadow: 0 2px 8px #192d4605; }
+.tab.active { display: block; }
+.grid { display: grid; gap: 16px; }
+label { display: block; margin-bottom: 6px; font-weight: 600; }
+input, textarea { display: block; width: 100%; min-width: 0; max-width: 100%; min-height: 56px; margin: 0; padding: 12px; border: 1px solid #b9c5d2; border-radius: 9px; color: var(--ink); background: #fff; font-size: 18px; }
+input[type="date"] { appearance: none; -webkit-appearance: none; text-align: left; }
+input::-webkit-date-and-time-value { text-align: left; min-width: 0; }
+input::placeholder, textarea::placeholder { color: #64748a; }
+textarea { resize: vertical; }
+.hint { font-size: 14px; margin: 4px 0 0; }
+.actions { display: grid; gap: 12px; margin-top: 20px; }
+.primary-action { width: 100%; background: var(--accent); border-color: var(--accent); color: #fff; }
+.last-sample { padding: 10px 12px; margin-bottom: 12px; border: 1px solid #c4d5e9; border-radius: 10px; background: #edf3fb; font-variant-numeric: tabular-nums; }
+.last-sample-heading { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 8px; font-size: 15px; }
+.last-sample-heading > span { color: var(--muted); font-size: 13px; }
+.last-sample-value { display: flex; align-items: baseline; gap: 6px; }
+.last-sample-value strong { font-size: 24px; }
+.last-sample-value > span { color: var(--muted); font-size: 14px; }
+.timer-box { text-align: center; margin-bottom: 12px; }
+.status-label { color: var(--muted); font-size: 14px; }
+.big { font-size: 34px; font-weight: 700; line-height: 1.25; font-variant-numeric: tabular-nums; }
+.status-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-bottom: 16px; }
+.status-box { min-width: 0; padding: 10px 12px; border: 1px solid #e3e9f1; border-radius: 10px; background: #f4f7fb; }
+.metric-value { font-size: 24px; font-weight: 650; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.status-label span { white-space: nowrap; }
+.controls { display: grid; gap: 16px; }
+.controls-hidden { display: none; }
+.veh-grid { display: none; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+body.counting .veh-grid { display: grid; }
+.vehicle { min-height: 80px; background: #edf3fb; border-color: #c4d5e9; color: #194e87; font-size: 22px; user-select: none; -webkit-user-select: none; }
+.vehicle small { display: block; margin-top: 4px; font-size: 14px; font-weight: 400; }
+.timing-action { text-align: center; }
+#green-btn { width: 164px; height: 164px; min-height: 164px; max-width: 164px; margin: 0 auto; padding: 0; border: 0; border-radius: 50%; background: #2e7d32; color: #fff; font-size: 30px; font-weight: 700; box-shadow: 0 4px 12px #183b2726; user-select: none; -webkit-user-select: none; }
+#end-of-sat-btn { width: 100%; min-height: 72px; background: #b42323; border-color: #b42323; color: #fff; font-size: 24px; }
+.admin-row { display: none; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+body.idle.has-samples .admin-row { display: grid; }
+.admin-row button { min-height: 64px; padding: 10px 8px; font-size: 16px; }
+#end-survey-btn { background: #edf3fb; border-color: #c4d5e9; color: #194e87; }
+.summary { padding: 16px; border: 1px solid #e3e9f1; border-radius: 10px; background: #f4f7fb; font-size: 16px; margin-bottom: 16px; }
+.summary strong { display: block; margin-top: 4px; font-size: 30px; font-variant-numeric: tabular-nums; }
+.summary:empty { display: none; }
+.export-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 0 0 24px; }
+.section-heading { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 10px; margin-bottom: 12px; }
+#sample-count, .table-note { font-size: 13px; }
+.empty-state { padding: 16px 8px; text-align: center; color: var(--muted); margin: 0; }
+.table-wrap { max-width: 100%; overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; }
+table { width: 100%; border-collapse: collapse; font-size: 15px; font-variant-numeric: tabular-nums; }
+thead { background: #f3f6fa; color: var(--muted); }
+th, td { padding: 10px 8px; text-align: right; border-bottom: 1px solid #e7ecf2; white-space: nowrap; }
+th { font-size: 13px; font-weight: 600; }
+th:first-child, td:first-child { text-align: left; }
+tbody tr:not(.recent-sample) { display: none; }
+.sample-section.expanded tbody tr { display: table-row; }
+tfoot { background: #f3f6fa; }
+.table-toggle { width: 100%; min-height: 48px; margin-top: 10px; background: #f5f8fc; color: var(--accent); font-size: 15px; }
+.table-note { margin: 8px 0 0; }
+.clear-action { margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--line); }
+#reset-survey-btn { width: 100%; background: #fff; border-color: #e5cccc; color: #9b2424; }
+footer { margin-top: 20px; text-align: center; font-size: 14px; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.preview-note { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin: 0 0 16px; font-size: 14px; color: var(--muted); }
+.preview-note strong { background: #fff1d5; color: #754800; border-radius: 6px; padding: 4px 8px; font-size: 12px; }
+a { color: var(--accent); }
+@media (max-width: 350px) { .app-shell { padding-left: 12px; padding-right: 12px; } .tab { padding: 12px; } h1 { font-size: 20px; } .status-box { padding: 8px; } }
+@media (min-width: 700px) { .app-shell { padding-top: 24px; } }

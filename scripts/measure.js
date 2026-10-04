@@ -6,6 +6,7 @@ import { renderResults, updateLastSampleSummary } from './results.js';
 import { click as audioClick } from './audio.js';
 
 let rafId=null;
+let delayId=null;
 function tick(){
   if(!state.running) return;
   const elapsed=nowSec()-state.startTime;
@@ -20,12 +21,14 @@ export function startGreen(){
   state.startTime=nowSec();
   resetRunTallies();
   ui.pcu.textContent='0';
+  ui.liveFlow.textContent='—';
   btns.green.style.display='none';
   btns.endSat.style.display='';
   document.body.classList.add('counting');
   document.body.classList.remove('idle');
   toggleVeh(true);
-  setTimeout(()=>{
+  delayId=setTimeout(()=>{
+    delayId=null;
     if(state.running){
       state.counterStart=nowSec();
       toggleVeh(false);
@@ -38,6 +41,7 @@ export function endSat(){
   if(!state.running) return;
   audioClick();
   state.running=false;
+  if(delayId!==null){ clearTimeout(delayId); delayId=null; }
   if(rafId){ cancelAnimationFrame(rafId); rafId=null; }
   const totalSec=nowSec()-state.startTime;
   const effSeconds=Math.max(0,totalSec-state.delaySec);
@@ -56,6 +60,7 @@ export function endSat(){
   updateLastSampleSummary();
   ui.timer.textContent='00:00.00';
   ui.pcu.textContent='0';
+  ui.liveFlow.textContent='—';
 }
 
 export function incrementPCUBy(type, delta){

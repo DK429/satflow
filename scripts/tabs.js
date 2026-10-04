@@ -11,10 +11,11 @@ export function setActiveTab(tab){
   if(!dock)return;
   if(tab==='measure'){
     dock.classList.remove('controls-hidden');
-    document.body.classList.add('dock-visible','idle');
-    document.body.classList.remove('counting');
-    btns.green.style.display='';
-    btns.endSat.style.display='none';
+    document.body.classList.add('dock-visible');
+    document.body.classList.toggle('idle', !state.running);
+    document.body.classList.toggle('counting', state.running);
+    btns.green.style.display=state.running?'none':'';
+    btns.endSat.style.display=state.running?'':'none';
     document.body.classList.toggle('has-samples', state.samples.length>0);
   }else{
     dock.classList.add('controls-hidden');
