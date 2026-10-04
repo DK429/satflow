@@ -1,15 +1,18 @@
 // scripts/export_csv.js
 import { state } from './state.js';
+import { APP_VERSION } from './version.js';
+const csvCell = value => '"' + String(value ?? '').replace(/"/g, '""') + '"';
+const csvRow = values => values.map(csvCell).join(',');
 export function exportCSV(){
   const s=state.site;const lines=[];
-  lines.push(`"SATFlow v1.5.5 (mobile, modular)"`);
-  lines.push(`"Site","${s.site||''}"`);
-  lines.push(`"Junction","${s.junction||''}"`);
-  lines.push(`"Arm/Lane","${s.arm||''}"`);
-  lines.push(`"Surveyor","${s.surveyor||''}"`);
-  lines.push(`"Date","${s.date||''}"`);
-  lines.push(`"Start-up Delay (s)","${state.delaySec}"`);
-  lines.push(`"Notes","${(s.notes||'').replace(/"/g,'""')}"`);
+  lines.push(csvRow([`SATFlow v${APP_VERSION} (mobile, modular)`]));
+  lines.push(csvRow(['Site',s.site]));
+  lines.push(csvRow(['Junction',s.junction]));
+  lines.push(csvRow(['Arm/Lane',s.arm]));
+  lines.push(csvRow(['Surveyor',s.surveyor]));
+  lines.push(csvRow(['Date',s.date]));
+  lines.push(csvRow(['Start-up Delay (s)',state.delaySec]));
+  lines.push(csvRow(['Notes',s.notes]));
   lines.push("");
   lines.push("Sample,PCU,Seconds,Flow (pcu/h),Car,LGV,HGV,Cycle");
   for(const r of state.samples){

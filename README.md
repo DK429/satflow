@@ -1,51 +1,40 @@
-# SATFlow (DK Coding) — v0.5 mobile
+# SATFlow — v1.5.6
 
-A lightweight, offline web app to measure **saturation flow (pcu/h)** at a signalised stop-line.
+A web app for measuring saturation flow (pcu/h) at a signalised stop-line.
 
-## What’s new in v0.5
-- **Per-sample counts** for each class (**Car, LGV, HGV, Cycle**) are recorded and shown in both tables.
-- **Action Log & Undo**: Undo removes the last increment with the right PCU value and decrements that class count accurately.
-- Keeps **v0.4** features: configurable start-up delay per site and rich keyboard shortcuts.
+## Survey workflow
 
-## Export
-CSV/TXT now include columns: `Sample, PCU, Seconds, Flow (pcu/h), Car, LGV, HGV, Cycle`.
+1. Enter site number, junction, arm/lane, surveyor, date, optional notes and start-up delay. The default delay is two seconds.
+2. Choose **Continue to Measure**, then **Green** to start timing.
+3. Vehicle controls become available after the configured delay. Record Car (1 PCU), LGV (1.5 PCU), Bus/HGV (2 PCU) or Cycle (0.5 PCU).
+4. Choose **End of Sat** to record the sample. Its flow appears in **Last sample**.
+5. Repeat for additional samples. **Delete Last Sample** removes the newest completed sample.
+6. **End Survey** opens Results. Save CSV or TXT above the sample table. **Reset Survey** clears completed samples; it does not reset a running measurement.
 
-## Keyboard Shortcuts
-- Green/End: `Space`
-- Car: `+`, `1`, or `C`
-- LGV: `2` or `L`
-- Bus/HGV: `3`, `H`, or `B`
-- Cycle: `4` or `Y`
-- Undo: `U`
-- Reset Current: `R`
+Changing screens does not stop or reset a running sample. Return to Measure to continue counting or use End of Sat. Delete and Reset do not alter a running sample.
 
+## Calculations
 
-**v0.6**: Fixed-width, right-aligned TXT export (8-char columns, line-by-line with CRLF endings).
+Effective seconds = max(0, measured seconds − start-up delay).
 
-**v0.7**: Docked controls only visible on Measurements tab with fade animation; TXT export adds dashed separator and totals row (PCU, Secs, Car, LGV, HGV, Cyc).
+Sample flow = PCU / effective seconds × 3600; zero when effective seconds is zero.
 
-# SATFlow (DK Coding) — v0.9 mobile
+Lane saturation flow uses total PCU / total effective seconds × 3600, rather than an unweighted average of sample flows.
 
-Minimal, offline web app to measure **saturation flow (pcu/h)** at a signalised stop-line.
+## Layout and exports
 
-## v0.9 Highlights
-- **Minimal measurement UI** (timer + count + live flow) for iPhone screens.
-- **2×2 vehicle grid** and **bottom full-width “End of Sat”** while counting.
-- **Controls only visible** on the Measurements tab (with fade animation).
-- **Per-sample delay deducted** from recorded seconds and used for flow calculation.
-- TXT export: **fixed-width, right-justified** columns + **dashed separator** + **totals row**.
-- **New:** Running **Last Sample** flow display on Measurements (hidden while counting).
-- **New:** Post-sample admin buttons show **End Survey** and **Delete Last Sample**.
-- Robust undo of increments via keyboard (`u`).
+The mobile layout follows MOVA Speed Survey: light panels, labelled inputs, equal tabs, a circular Green button, large vehicle controls and a prominent last-sample reading. Results shows the two newest samples first; **Show all samples** expands the complete table. Swipe horizontally to see vehicle counts.
 
-## Flow Calculation
-Per-sample flow uses **effective seconds** = `max(0, measured_seconds − start_delay)`.
+Both exports always include every retained sample in recording order, site metadata, per-sample PCU, effective seconds, flow, class counts, totals and lane saturation flow. CSV handles quotation marks, commas and line breaks in metadata. The app and saved reports share the same version constant.
 
-## Export
-- **CSV**: raw site data, samples, and lane flow.
-- **TXT**: fixed-width columns, totals row (PCU, Secs, Car, LGV, HGV, Cyc), CRLF endings.
+Button taps provide an audible click where supported by the browser. The current app does not wire up keyboard shortcuts, undo of individual vehicle taps, or a haptic-feedback setting.
 
+## Browser checks
 
-**v1.0**: Adds safe haptic feedback (Vibration API) on key taps (vehicle increments, Green/End, delete last, undo).
+GitHub Actions runs Chromium and WebKit tests across six phone widths, rotation, larger text, touch counting, start-up delay, navigation during timing, deletion, sample-table expansion, exports and reset. Physical iPhone Safari and Samsung Internet checks complement these automated tests.
 
-**v1.1**: Adds a simple 'Enable Haptic Feedback' toggle on the Site tab (persisted).
+For local tests, install Playwright and its Chromium/WebKit browsers, serve the repository on port 8767, then run:
+
+```sh
+node --test tests/mobile-layout.test.cjs
+```
