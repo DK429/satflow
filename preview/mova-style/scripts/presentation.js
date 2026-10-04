@@ -1,4 +1,6 @@
-// Presentation only: existing timing, samples, calculations and exports are untouched.
+// Display formatting and shared version label.
+import { APP_VERSION } from './version.js';
+document.querySelector('.app-version').textContent = 'v' + APP_VERSION;
 const section = document.getElementById('sample-section');
 const body = document.getElementById('results-body');
 const toggle = document.getElementById('samples-toggle');
