@@ -1,0 +1,29 @@
+name: Mobile layout checks
+on:
+  pull_request:
+  push:
+    branches: [mova-mobile-style]
+permissions:
+  contents: read
+jobs:
+  mobile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save playwright@1.56.1
+      - run: npx playwright install --with-deps chromium webkit
+      - name: Run phone layout and survey regression tests
+        run: |
+          python3 -m http.server 8767 --bind 127.0.0.1 &
+          node --test tests/mobile-layout.test.cjs
+        env:
+          SATFLOW_SCREENSHOTS: '1'
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phone-layout-screenshots
+          path: test-artifacts
