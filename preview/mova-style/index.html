@@ -1,90 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="theme-color" content="#f3f6fa" />
-  <title>SATFlow</title>
-  <link rel="stylesheet" href="css/styles.css" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="refresh" content="0;url=../../?v=1.5.6">
+<title>SATFlow v1.5.6</title>
 </head>
-<body>
-  <div class="app-shell">
-    <header>
-      <div class="app-header"><h1>SATFlow</h1><small class="app-version">v1.5.6</small></div>
-      <nav aria-label="Survey screens">
-        <button class="tab-btn active" data-tab="site" aria-controls="tab-site">Details</button>
-        <button class="tab-btn" data-tab="measure" aria-controls="tab-measure">Measure</button>
-        <button class="tab-btn" data-tab="results" aria-controls="tab-results">Results</button>
-      </nav>
-      <div class="preview-note"><strong>Test version</strong><a href="../../">Current survey</a></div>
-    </header>
-    <main>
-      <section id="tab-site" class="tab active" aria-labelledby="details-heading">
-        <h2 id="details-heading">Site details</h2>
-        <form id="site-form">
-          <div class="grid compact">
-            <div class="field"><label for="site">Site number</label><input type="text" id="site" placeholder="e.g. 511bw" /></div>
-            <div class="field"><label for="junction">Junction location</label><input type="text" id="junction" placeholder="e.g. Doncaster Rd / Black Rd" /></div>
-            <div class="field"><label for="arm">Arm / Lane</label><input type="text" id="arm" placeholder="e.g. Northbound Lane 1" /></div>
-            <div class="field"><label for="surveyor">Surveyor</label><input type="text" id="surveyor" placeholder="e.g. D.K" /></div>
-            <div class="field"><label for="date">Survey date</label><input type="date" id="date" /></div>
-            <div class="field"><label for="delay">Start-up delay (seconds)</label><input type="number" id="delay" step="0.1" min="0" placeholder="2" aria-describedby="delay-help" /><p id="delay-help" class="hint">Delay deducted from each measurement.</p></div>
-            <div class="field"><label for="notes">Notes <span class="muted">(optional)</span></label><textarea id="notes" rows="3" placeholder="Site or survey notes"></textarea></div>
-          </div>
-          <div class="actions"><button type="button" id="start-measurements" class="primary-action">Continue to Measure</button></div>
-        </form>
-      </section>
-      <section id="tab-measure" class="tab" aria-label="Measurements">
-        <div id="last-sample" class="last-sample" style="display:none" aria-live="polite">
-          <div class="last-sample-heading"><strong>Last sample</strong><span>Sample <span id="last-sample-no">—</span></span></div>
-          <div class="last-sample-value"><strong id="last-flow">—</strong><span>pcu/h</span></div>
-        </div>
-        <div class="timer-box"><div class="status-label">Timer</div><div id="timer-display" class="big">00:00.00</div><div id="delay-hint" class="hint">Counting starts 2s after Green</div></div>
-        <div class="status-row">
-          <div class="status-box"><div class="status-label">Current PCU</div><div id="pcu-display" class="metric-value">0</div></div>
-          <div class="status-box"><div class="status-label">Live flow <span>(pcu/h)</span></div><div id="live-flow" class="metric-value">—</div></div>
-        </div>
-        <div class="controls controls-hidden" id="dock">
-          <div class="veh-grid" aria-label="Record a vehicle">
-            <button id="btn-car" class="vehicle" disabled>Car <small>1 PCU</small></button>
-            <button id="btn-lgv" class="vehicle" disabled>LGV <small>1.5 PCU</small></button>
-            <button id="btn-hgv" class="vehicle" disabled>Bus / HGV <small>2 PCU</small></button>
-            <button id="btn-cycle" class="vehicle" disabled>Cycle <small>0.5 PCU</small></button>
-          </div>
-          <div class="timing-action">
-            <button id="green-btn" class="primary">Green</button>
-            <button id="end-of-sat-btn" class="danger" style="display:none">End of Sat</button>
-          </div>
-          <div class="admin-row">
-            <button id="delete-last-btn" class="secondary">Delete Last Sample</button>
-            <button id="end-survey-btn" class="secondary">End Survey</button>
-          </div>
-        </div>
-      </section>
-      <section id="tab-results" class="tab" aria-labelledby="results-heading">
-        <h2 id="results-heading">Survey results</h2>
-        <div id="summary" class="summary" aria-live="polite"></div>
-        <div class="actions export-actions"><button id="export-csv" class="primary-action">Save CSV</button><button id="export-txt" class="secondary">Save TXT</button></div>
-        <div id="sample-section" class="sample-section">
-          <div class="section-heading"><h3>Recorded samples</h3><span id="sample-count" class="muted">0 samples</span></div>
-          <p id="samples-empty" class="empty-state">No samples recorded yet.</p>
-          <div class="table-wrap" tabindex="0" role="region" aria-label="Recorded samples: scroll for vehicle counts">
-            <table id="samples-table">
-              <caption class="sr-only">Retained survey samples, newest first. Totals include all samples.</caption>
-              <thead><tr><th scope="col">Sample</th><th scope="col">PCU</th><th scope="col">Seconds</th><th scope="col">Flow<br />(pcu/h)</th><th scope="col">Car</th><th scope="col">LGV</th><th scope="col">HGV</th><th scope="col">Cycle</th></tr></thead>
-              <tbody id="results-body"></tbody>
-              <tfoot><tr id="results-totals-row"></tr></tfoot>
-            </table>
-          </div>
-          <button id="samples-toggle" class="table-toggle" aria-expanded="false" aria-controls="results-body" hidden>Show all samples</button>
-          <p class="table-note">Swipe the table to see vehicle counts. Saved files include every sample.</p>
-        </div>
-        <div class="clear-action"><button id="reset-survey-btn" class="ghost">Reset Survey</button></div>
-      </section>
-    </main>
-    <footer><small>Saturation flow survey · DK Coding</small></footer>
-  </div>
-  <script type="module" src="scripts/main.js"></script>
-  <script type="module" src="scripts/presentation.js"></script>
-</body>
+<body><p>SATFlow is now available at <a href="../../?v=1.5.6">the current survey</a>.</p></body>
 </html>
